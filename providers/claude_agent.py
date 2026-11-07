@@ -1,5 +1,9 @@
 """The real agent: Claude with the system prompt and tools in agent/.
 
+Point T2R_AGENT_DIR at another folder holding system_prompt.md and tools.json
+to regress a different agent with the same transcripts machinery (for example
+the exports of deployment-in-a-box).
+
 One call = one agent move. The replayed history already contains every earlier
 tool_use / tool_result pair, so we never execute tools here: we only record
 what the agent *decided* to do next, which is what the expectations check.
@@ -15,6 +19,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 MODEL = os.environ.get("T2R_MODEL", "claude-opus-5-5")
+AGENT_DIR = Path(os.environ.get("T2R_AGENT_DIR") or ROOT / "agent")
 
 
 @lru_cache(maxsize=1)
@@ -26,8 +31,8 @@ def _client():
 
 @lru_cache(maxsize=1)
 def _agent_config() -> tuple[str, list[dict[str, Any]]]:
-    system = (ROOT / "agent" / "system_prompt.md").read_text(encoding="utf-8")
-    tools = json.loads((ROOT / "agent" / "tools.json").read_text(encoding="utf-8"))
+    system = (AGENT_DIR / "system_prompt.md").read_text(encoding="utf-8")
+    tools = json.loads((AGENT_DIR / "tools.json").read_text(encoding="utf-8"))
     return system, tools
 
 
