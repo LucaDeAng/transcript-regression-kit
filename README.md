@@ -92,7 +92,10 @@ metric), or use `promptfoo eval --repeat 5`. The live agent
 `agent/tools.json` and needs `ANTHROPIC_API_KEY`. To regress another agent, set
 `T2R_AGENT_DIR` to a folder with its own `system_prompt.md` and `tools.json` and pass
 `--transcripts` (this is how [deployment-in-a-box](https://github.com/LucaDeAng/deployment-in-a-box)
-turns its simulated calls into regression tests). `python -m t2r.build --judge`
+turns its simulated calls into regression tests). T-012 here checks today's policy, an AI caller
+gets no data; its handshake variants T-012a–f, for an agent that accepts a delegated, scoped
+credential, live in [ai-to-ai-call-lab](https://github.com/LucaDeAng/ai-to-ai-call-lab).
+`python -m t2r.build --judge`
 adds an LLM-judge assertion wherever a transcript carries a `rubric`.
 
 ## Annotating a transcript
