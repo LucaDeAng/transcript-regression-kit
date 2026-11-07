@@ -11,6 +11,7 @@ what the agent *decided* to do next, which is what the expectations check.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from functools import lru_cache
@@ -36,6 +37,13 @@ def _agent_config() -> tuple[str, list[dict[str, Any]]]:
     return system, tools
 
 
+def fingerprint() -> dict[str, str]:
+    """What a result file needs to say which agent it measured."""
+    system, tools = _agent_config()
+    blob = system + json.dumps(tools, sort_keys=True, ensure_ascii=False)
+    return {"model": MODEL, "prompt_sha256": hashlib.sha256(blob.encode("utf-8")).hexdigest()[:16]}
+
+
 def respond(messages: list[dict[str, Any]]) -> dict[str, Any]:
     system, tools = _agent_config()
     response = _client().beta.messages.create(
@@ -55,4 +63,5 @@ def respond(messages: list[dict[str, Any]]) -> dict[str, Any]:
         raise RuntimeError("model refused (stop_reason=refusal) even after fallback")
     text = " ".join(b.text for b in response.content if b.type == "text").strip()
     calls = [{"name": b.name, "args": dict(b.input)} for b in response.content if b.type == "tool_use"]
-    return {"text": text, "tool_calls": calls}
+    # response.model is the model that answered: the fallback, if the request fell back.
+    return {"text": text, "tool_calls": calls, "model": response.model}

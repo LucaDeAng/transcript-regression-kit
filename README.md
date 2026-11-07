@@ -91,7 +91,10 @@ metric), or use `promptfoo eval --repeat 5`. Each row also counts, per check, th
 failed in (`failure_counts`), so a 2/5 that failed twice on length is told apart from one that
 failed once on length and once on a forbidden tool call. The live agent
 (`providers/claude_agent.py`) runs Claude with `agent/system_prompt.md` and
-`agent/tools.json` and needs `ANTHROPIC_API_KEY`. To regress another agent, set
+`agent/tools.json` and needs `ANTHROPIC_API_KEY`; `T2R_MODEL` picks the model (default
+`claude-opus-5-5`). The result file records the model asked for, the model that answered each
+checkpoint (a different one means the server-side fallback served it), the date and a hash of the
+prompt and tools. To regress another agent, set
 `T2R_AGENT_DIR` to a folder with its own `system_prompt.md` and `tools.json` and pass
 `--transcripts` (this is how [deployment-in-a-box](https://github.com/LucaDeAng/deployment-in-a-box)
 turns its simulated calls into regression tests). T-012 here checks today's policy, an AI caller

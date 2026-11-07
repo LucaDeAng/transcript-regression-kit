@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from datetime import date
 from pathlib import Path
 
 from providers.agent_provider import next_move
@@ -44,8 +45,15 @@ def run(agent: str, transcripts_dir: Path, trials: int = 1) -> dict:
             # trials in which each check failed: a 2/5 can hide two different failures
             "failure_counts": failure_counts,
             "output": first_failure[1] if first_failure else outcomes[0][2],
+            # the model(s) that actually answered; more than one means a fallback served some trials
+            "served_models": sorted({m["model"] for _, _, m in outcomes if m.get("model")}),
         })
-    return {"format": "t2r-local/1", "agent": agent, "trials": trials, "results": rows}
+    report = {"format": "t2r-local/1", "agent": agent, "trials": trials, "date": date.today().isoformat()}
+    if agent == "claude":
+        from providers import claude_agent
+
+        report.update(claude_agent.fingerprint())
+    return {**report, "results": rows}
 
 
 def main() -> None:
