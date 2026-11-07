@@ -44,8 +44,9 @@ jobs:
       - name: Replay every checkpoint against the agent
         run: npx -y promptfoo@0.125.1 eval -c promptfooconfig.yaml -o results/promptfoo.json --no-cache --no-progress-bar || true
       - name: Gate on per-tag regressions
-        # One baseline per agent. A live model is not deterministic: allow one
-        # newly failing checkpoint per tag. The first live run has no baseline
+        # Mocks are judged against baseline.mock-v1.json, the live model against its own.
+        # A live model is not deterministic: allow one newly failing checkpoint per tag,
+        # except safety/security/privacy (always zero). The first live run has no baseline
         # yet: it writes one (uploaded below) for you to review and commit.
         run: |
           TOL=0; [ "$T2R_AGENT" = "claude" ] && TOL=1
