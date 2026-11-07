@@ -1,6 +1,8 @@
 name: transcript-regression
 
 on:
+  push:
+    branches: [main]
   pull_request:
     paths:
       - "agent/**"

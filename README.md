@@ -1,5 +1,7 @@
 # transcript-regression-kit
 
+[![transcript-regression](https://github.com/LucaDeAng/transcript-regression-kit/actions/workflows/regression.yml/badge.svg)](https://github.com/LucaDeAng/transcript-regression-kit/actions/workflows/regression.yml)
+
 **Turn annotated conversations into regression tests that run in CI.**
 
 Every conversational AI team has a folder of transcripts where the agent did
