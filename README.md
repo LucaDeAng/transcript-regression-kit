@@ -87,7 +87,9 @@ npx -y promptfoo@0.125.1 view                           # per-check breakdown in
 Switch agents with `T2R_AGENT=mock-v1|mock-v2|claude`. For a live model,
 replay each checkpoint several times and require all to pass: `python -m t2r.run
 --agent claude --trials 5` reports pass^5 ([τ-bench](https://arxiv.org/abs/2406.12045)'s
-metric), or use `promptfoo eval --repeat 5`. The live agent
+metric), or use `promptfoo eval --repeat 5`. Each row also counts, per check, the trials it
+failed in (`failure_counts`), so a 2/5 that failed twice on length is told apart from one that
+failed once on length and once on a forbidden tool call. The live agent
 (`providers/claude_agent.py`) runs Claude with `agent/system_prompt.md` and
 `agent/tools.json` and needs `ANTHROPIC_API_KEY`. To regress another agent, set
 `T2R_AGENT_DIR` to a folder with its own `system_prompt.md` and `tools.json` and pass

@@ -24,11 +24,14 @@ def run(agent: str, transcripts_dir: Path, trials: int = 1) -> dict:
     not good enough for an identity or safety rule."""
     rows = []
     for cp in all_checkpoints(transcripts_dir):
-        outcomes = []
+        outcomes, failure_counts = [], {}
         for _ in range(trials):
             move = next_move(cp.messages, agent)
             checks = evaluate(cp.expect, move)
             outcomes.append((all(c.passed for c in checks), [f"{c.name}: {c.reason}" for c in checks if not c.passed], move))
+            for c in checks:
+                if not c.passed:
+                    failure_counts[c.name] = failure_counts.get(c.name, 0) + 1
         passed = sum(ok for ok, _, _ in outcomes)
         first_failure = next(((f, m) for ok, f, m in outcomes if not ok), None)
         rows.append({
@@ -38,6 +41,8 @@ def run(agent: str, transcripts_dir: Path, trials: int = 1) -> dict:
             "pass": passed == trials,
             "trials_passed": f"{passed}/{trials}",
             "failures": first_failure[0] if first_failure else [],
+            # trials in which each check failed: a 2/5 can hide two different failures
+            "failure_counts": failure_counts,
             "output": first_failure[1] if first_failure else outcomes[0][2],
         })
     return {"format": "t2r-local/1", "agent": agent, "trials": trials, "results": rows}
@@ -58,7 +63,8 @@ def main() -> None:
     for r in report["results"]:
         mark = "PASS" if r["pass"] else "FAIL"
         flaky = f" [{r['trials_passed']}]" if args.trials > 1 else ""
-        print(f"{mark}  {r['test_id']:<10}{flaky} {'; '.join(r['failures'])}")
+        counts = f" (failed in: {', '.join(f'{k} x{v}' for k, v in r['failure_counts'].items())})" if args.trials > 1 and r["failure_counts"] else ""
+        print(f"{mark}  {r['test_id']:<10}{flaky} {'; '.join(r['failures'])}{counts}")
     passed = sum(r["pass"] for r in report["results"])
     metric = f"pass^{args.trials}" if args.trials > 1 else "passed"
     print(f"\n{passed}/{len(report['results'])} checkpoints {metric} ({args.agent}) -> {args.out}")

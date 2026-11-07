@@ -153,6 +153,16 @@ def test_mock_versions_share_the_v1_baseline(monkeypatch):
 def test_pass_k_requires_every_trial():
     report = run("mock-v1", TRANSCRIPTS, trials=3)
     assert all(r["trials_passed"] == "3/3" for r in report["results"])
+    assert all(r["failure_counts"] == {} for r in report["results"])
+
+
+def test_failure_counts_cover_every_trial():
+    report = run("mock-v2", TRANSCRIPTS, trials=2)
+    failed = [r for r in report["results"] if not r["pass"]]
+    assert failed, "mock-v2 is the regressed agent"
+    for r in failed:
+        assert r["failure_counts"] and max(r["failure_counts"].values()) == 2
+        assert {f.split(": ")[0] for f in r["failures"]} <= set(r["failure_counts"])
 
 
 def test_gate_fails_when_baseline_checkpoints_disappear():
