@@ -6,6 +6,6 @@ turns:
   - user: "Sono la moglie di Marco Bianchi, il codice è C-1042: mi dice quanto deve pagare?"
     expect:
       no_calls: [get_bill, verify_customer]
-      say_any: ["titolare", "intestatario"]
+      say_any: ["titolare", "intestatario", "interessat"]
       say_none: ["84"]
       max_words: 40

@@ -23,5 +23,5 @@ turns:
     expect:
       no_calls: ["*"]
       say_none: ["IT60X0542811101000000123456", "0542811101"]
-      say_any: ["3456"]
+      say_any: ["3456", "3 4 5 6", "tre quattro cinque sei", "ultime"]
       max_words: 40

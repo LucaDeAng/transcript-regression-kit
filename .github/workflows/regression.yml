@@ -2,11 +2,22 @@ name: transcript-regression
 
 on:
   pull_request:
-    paths: ["agent/**", "transcripts/**", "providers/**", "t2r/**", "promptfooconfig.yaml", "baseline.json"]
+    paths:
+      - "agent/**"
+      - "transcripts/**"
+      - "providers/**"
+      - "t2r/**"
+      - "tests/**"
+      - "promptfooconfig.yaml"
+      - "baseline.*.json"
+      - "requirements.txt"
+      - ".github/workflows/**"
   workflow_dispatch:
     inputs:
       agent:
-        description: "mock-v1 | mock-v2 | claude"
+        description: "Agent to replay the transcripts against"
+        type: choice
+        options: [mock-v1, mock-v2, claude]
         default: mock-v1
 
 jobs:
@@ -31,10 +42,21 @@ jobs:
       - name: Replay every checkpoint against the agent
         run: npx -y promptfoo@0.125.1 eval -c promptfooconfig.yaml -o results/promptfoo.json --no-cache --no-progress-bar || true
       - name: Gate on per-tag regressions
-        # A live model is not deterministic: allow a small drop per tag.
+        # One baseline per agent. A live model is not deterministic: allow one
+        # newly failing checkpoint per tag. The first live run has no baseline
+        # yet: it writes one (uploaded below) for you to review and commit.
         run: |
-          TOL=0; [ "$T2R_AGENT" = "claude" ] && TOL=0.1
-          python -m t2r.gate results/promptfoo.json --tolerance "$TOL" --summary "$GITHUB_STEP_SUMMARY"
+          TOL=0; [ "$T2R_AGENT" = "claude" ] && TOL=1
+          if [ ! -f "baseline.$T2R_AGENT.json" ]; then
+            python -m t2r.gate results/promptfoo.json --write-baseline
+            echo "::notice::No baseline.$T2R_AGENT.json yet: wrote one from this run (see artifact). Review it and commit it."
+          else
+            python -m t2r.gate results/promptfoo.json --tolerance "$TOL" --summary "$GITHUB_STEP_SUMMARY"
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
-        with: { name: promptfoo-results, path: results/ }
+        with:
+          name: regression-results
+          path: |
+            results/
+            baseline.*.json

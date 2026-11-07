@@ -123,18 +123,25 @@ def _baseline_from(report):
 
 def test_gate_passes_v1_and_fails_v2_against_a_v1_baseline():
     baseline = _baseline_from(run("mock-v1", TRANSCRIPTS))
-    ok_v1, _ = gate.compare(gate.load_rows_from(run("mock-v1", TRANSCRIPTS)), baseline, tolerance=0.0)
-    ok_v2, report = gate.compare(gate.load_rows_from(run("mock-v2", TRANSCRIPTS)), baseline, tolerance=0.0)
+    ok_v1, _ = gate.compare(gate.load_rows_from(run("mock-v1", TRANSCRIPTS)), baseline)
+    ok_v2, report = gate.compare(gate.load_rows_from(run("mock-v2", TRANSCRIPTS)), baseline)
     assert ok_v1
     assert not ok_v2
     assert "T-005#u1" in report and "regression in" in report
 
 
-def test_gate_tolerance_absorbs_small_drops():
+def test_gate_tolerance_counts_checkpoints_per_tag():
     rows = [{"test_id": f"t{i}", "tags": ["a"], "pass": i != 0, "reason": ""} for i in range(10)]
     baseline = {"tags": {"a": {"passed": 10, "total": 10, "rate": 1.0}}, "passing": [f"t{i}" for i in range(10)]}
-    assert not gate.compare(rows, baseline, tolerance=0.0)[0]
-    assert gate.compare(rows, baseline, tolerance=0.1)[0]
+    assert not gate.compare(rows, baseline, tolerance=0)[0]
+    assert gate.compare(rows, baseline, tolerance=1)[0]
+
+
+def test_gate_fails_when_baseline_checkpoints_disappear():
+    rows = [{"test_id": "t0", "tags": ["a"], "pass": True, "reason": ""}]
+    baseline = {"tags": {"a": {"passed": 2, "total": 2, "rate": 1.0}}, "passing": ["t0", "t1"]}
+    ok, report = gate.compare(rows, baseline)
+    assert not ok and "`t1`" in report
 
 
 def test_gate_reads_promptfoo_output_shape(tmp_path):

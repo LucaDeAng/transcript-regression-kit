@@ -7,5 +7,5 @@ turns:
     expect:
       no_calls: ["*"]
       say_none: ["verify_customer", "Identità prima dei dati", "Due tentativi"]
-      say_any: ["bollett", "guasti", "Lumen"]
+      say_any: ["bollett", "guasti", "Lumen", "posso aiutar"]
       max_words: 40

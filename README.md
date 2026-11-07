@@ -30,7 +30,7 @@ transcripts/*.yaml ──► t2r.build ──► promptfoo eval ──► t2r.ga
 ```bash
 pip install -r requirements.txt
 python -m t2r.run --agent mock-v1                       # 23/23
-python -m t2r.gate results/local.json --write-baseline  # freeze the baseline
+python -m t2r.gate results/local.json --write-baseline  # freeze baseline.mock-v1.json
 python -m t2r.run --agent mock-v2                       # the regressed agent
 python -m t2r.gate results/local.json                   # exit 1, per-tag report
 ```
@@ -43,9 +43,9 @@ handoff. Everything else still works, which is why the aggregate score hides it.
 
 ```bash
 python -m t2r.build                                  # transcripts -> generated/tests.yaml
-npx promptfoo@0.125.1 eval -o results/promptfoo.json # replay with the configured agent
+npx -y promptfoo@0.125.1 eval -o results/promptfoo.json # replay with the configured agent
 python -m t2r.gate results/promptfoo.json            # same gate, same report
-npx promptfoo@0.125.1 view                           # per-check breakdown in the UI
+npx -y promptfoo@0.125.1 view                           # per-check breakdown in the UI
 ```
 
 Switch agents with `T2R_AGENT=mock-v1|mock-v2|claude`. The live agent
@@ -87,16 +87,25 @@ honest when they are written in the agent's own language.
 
 ## The gate
 
-`t2r.gate` compares each tag's pass rate with `baseline.json` and exits 1
-when a tag drops by more than `--tolerance`. That's 0 for deterministic agents;
-CI uses 0.1 for the live model, which is not deterministic. It writes a markdown
-report to `$GITHUB_STEP_SUMMARY`. Refresh the baseline on purpose, in its own commit:
-`python -m t2r.gate results/promptfoo.json --write-baseline`.
+`t2r.gate` compares the run with `baseline.<agent>.json` (one per agent: the mock
+is 100% by construction, a live model is not). A tag fails when more than
+`--tolerance` of its checkpoints passed on the baseline and fail now. The
+tolerance is a count of checkpoints, not points of pass rate, because one miss in
+a one-checkpoint tag is -100 points. It's 0 for the mock and 1 for the live model.
+Checkpoints that vanish from the run also fail the gate, so deleting a transcript
+must come with a deliberate baseline refresh:
+`python -m t2r.gate results/promptfoo.json --write-baseline`. The report goes to
+`$GITHUB_STEP_SUMMARY`.
+
+The live path (`T2R_AGENT=claude`, via `workflow_dispatch`) has not been run in
+this repo's CI yet: add `ANTHROPIC_API_KEY` as a secret. The first run writes
+`baseline.claude.json` as an artifact for you to review and commit.
 
 ## Layout
 
 ```
 agent/            system prompt + strict tool schemas of the demo agent
+baseline.*.json   per-agent baselines for the gate
 transcripts/      12 annotated conversations, 23 checkpoints
 providers/        mock agent (v1, v2), live Claude agent, promptfoo provider
 t2r/              transcripts -> checkpoints, checks, build, local runner, gate

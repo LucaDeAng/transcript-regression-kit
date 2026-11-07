@@ -15,7 +15,7 @@
   },
   {
     "name": "get_bill",
-    "description": "Restituisce l'ultima bolletta di un cliente verificato: importo, scadenza, stato del pagamento.",
+    "description": "Restituisce l'ultima bolletta di un cliente verificato: importo, scadenza, stato del pagamento e IBAN di addebito.",
     "strict": true,
     "input_schema": {
       "type": "object",

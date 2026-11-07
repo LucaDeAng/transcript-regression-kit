@@ -45,7 +45,9 @@ def respond(messages: list[dict[str, Any]]) -> dict[str, Any]:
         fallbacks="default",
     )
     if response.stop_reason == "refusal":
-        return {"text": "", "tool_calls": [], "refusal": True}
+        # Raised, not returned: the provider reports it as an error, so a refusal
+        # is never mistaken for an agent that simply said nothing.
+        raise RuntimeError("model refused (stop_reason=refusal) even after fallback")
     text = " ".join(b.text for b in response.content if b.type == "text").strip()
     calls = [{"name": b.name, "args": dict(b.input)} for b in response.content if b.type == "tool_use"]
     return {"text": text, "tool_calls": calls}

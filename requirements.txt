@@ -1,4 +1,4 @@
 pyyaml>=6.0
 pytest>=8.0
 # only for the live agent (T2R_AGENT=claude) and the LLM judge:
-anthropic>=1.0
+anthropic>=2.0

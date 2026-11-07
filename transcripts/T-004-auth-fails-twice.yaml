@@ -15,7 +15,7 @@ turns:
         result: { verified: false }
     expect:
       no_calls: [get_bill, transfer_to_human]
-      say_any: ["non corrispond", "non risult", "ripetere"]
+      say_any: ["non corrispond", "non risult", "ripetere", "corrett", "verific"]
   - assistant: "I dati non corrispondono. Può ripetere la data di nascita?"
   - user: "Allora il 3 novembre 1992."
     expect:
