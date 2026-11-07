@@ -27,7 +27,39 @@ transcripts/*.yaml ──► t2r.build ──► promptfoo eval ──► t2r.ga
   *auth 46%, escalation 20%, outage/safety/security still 100%*, and lists the
   nine checkpoints that broke.
 
+Tags are only useful if each maps to something the business pays for:
+
+| tag | what a failure costs |
+|---|---|
+| `auth`, `privacy`, `ai-caller` | data disclosed to the wrong person: GDPR incident, regulator exposure |
+| `escalation` | callers trapped with the bot: complaints, CSAT, churn |
+| `safety` | a gas leak handled like small talk: liability |
+| `security` | prompt injection or system-prompt leakage |
+| `outage`, `billing`, `meter`, `multi-intent`, `scope` | containment and handle time: the business case itself |
+
+`safety`, `security` and `privacy` are strict: zero tolerance in the gate, always.
+
+## Where this sits
+
+Turning production failures into regression tests is not a new idea. Sierra's
+[agent development life cycle](https://sierra.ai/blog/agent-development-life-cycle)
+gates releases on tests built from annotated conversations and on
+[simulations](https://sierra.ai/blog/simulations-the-secret-behind-every-great-agent).
+Voice-testing platforms such as [Hamming](https://www.hamming.ai) and
+[Cekura](https://cekura.ai) replay production calls, and
+[Langfuse](https://langfuse.com) or [Braintrust](https://www.braintrust.dev) go from
+trace to dataset to CI experiment. At a customer I would start from one of those.
+This repo is the mechanism in a few hundred lines, so every decision is visible
+and arguable. Three of those decisions differ from most tools: each test replays to a
+single checkpoint, the gate works per tag instead of on an average, and the checks
+are written in the agent's own language (Italian).
+
 ## Quick start (no API key, no Node)
+
+The 12 transcripts are **synthetic**, written to cover the rules in
+`agent/system_prompt.md`. The numbers below come from a deterministic **mock**
+agent, not from a model.
+
 
 ```bash
 pip install -r requirements.txt
@@ -39,7 +71,9 @@ python -m t2r.gate results/local.json                   # exit 1, per-tag report
 
 `mock-v2` is the same agent after a "make it more helpful" prompt change: it
 treats a customer code as proof of identity and talks callers out of a human
-handoff. Everything else still works, which is why the aggregate score hides it.
+handoff. Those two injected behaviours break 9 checkpoints and the gate catches
+all 9; the other 14 stay green. Six tags go red because checkpoints carry
+several tags. Everything else still works, which is why the aggregate score hides it.
 
 ## With promptfoo (what CI runs)
 
@@ -50,7 +84,10 @@ python -m t2r.gate results/promptfoo.json            # same gate, same report
 npx -y promptfoo@0.125.1 view                           # per-check breakdown in the UI
 ```
 
-Switch agents with `T2R_AGENT=mock-v1|mock-v2|claude`. The live agent
+Switch agents with `T2R_AGENT=mock-v1|mock-v2|claude`. For a live model,
+replay each checkpoint several times and require all to pass: `python -m t2r.run
+--agent claude --trials 5` reports pass^5 ([τ-bench](https://arxiv.org/abs/2406.12045)'s
+metric), or use `promptfoo eval --repeat 5`. The live agent
 (`providers/claude_agent.py`) runs Claude with `agent/system_prompt.md` and
 `agent/tools.json` and needs `ANTHROPIC_API_KEY`. `python -m t2r.build --judge`
 adds an LLM-judge assertion wherever a transcript carries a `rubric`.
@@ -84,24 +121,30 @@ turns:
 | `rubric` | free-text criterion for the optional LLM judge |
 
 The transcripts are in Italian on purpose: the demo agent is an Italian
-utility voice line (fictional "Lumen Energia"), and keyword checks are only
+utility voice line (fictional "Brezzaluce Energia"), and keyword checks are only
 honest when they are written in the agent's own language.
 
 ## The gate
 
-`t2r.gate` compares the run with `baseline.<agent>.json` (one per agent: the mock
-is 100% by construction, a live model is not). A tag fails when more than
+`t2r.gate` compares the run with a baseline: `baseline.mock-v1.json` for every
+mock version (so `mock-v2` stays red), `baseline.claude.json` for the live model.
+The mock is 100% by construction; a live model is not. A tag fails when more than
 `--tolerance` of its checkpoints passed on the baseline and fail now. The
 tolerance is a count of checkpoints, not points of pass rate, because one miss in
-a one-checkpoint tag is -100 points. It's 0 for the mock and 1 for the live model.
+a one-checkpoint tag is -100 points. It's 0 for the mock and 1 for the live model,
+except on strict tags, which are always 0.
 Checkpoints that vanish from the run also fail the gate, so deleting a transcript
 must come with a deliberate baseline refresh:
 `python -m t2r.gate results/promptfoo.json --write-baseline`. The report goes to
 `$GITHUB_STEP_SUMMARY`.
 
-The live path (`T2R_AGENT=claude`, via `workflow_dispatch`) has not been run in
-this repo's CI yet: add `ANTHROPIC_API_KEY` as a secret. The first run writes
-`baseline.claude.json` as an artifact for you to review and commit.
+**What CI checks today.** Pull requests run the deterministic mock. That tests
+the kit (parser, checks, gate), not the prompt: the mock does not read
+`agent/system_prompt.md`, so a prompt edit cannot turn it red. The live agent
+runs on demand (`workflow_dispatch` with `claude`). The request shape has been
+checked against the Anthropic SDK, but **no live run has been published yet**.
+Add `ANTHROPIC_API_KEY` as a secret; the first run writes `baseline.claude.json`
+as an artifact for you to review and commit.
 
 ## Layout
 
@@ -115,12 +158,26 @@ tests/            the kit's own tests (pytest)
 .github/workflows regression.yml: pytest -> build -> promptfoo -> gate
 ```
 
-## Limits
+## Limits and what I would do next
 
-Keyword checks catch rule violations, not tone. They are brittle to paraphrase,
-so prefer tool-call checks (`calls`, `no_calls`, `escalate`) and use `say_*`
-for facts that must appear verbatim (a ticket number, an emergency line). Put
-judgement calls in `rubric`. The transcripts are synthetic. With real ones,
-redact personal data before they enter the repo.
+- **Replay is off-policy.** Each checkpoint restores the recorded history, so it
+  pinpoints one decision, but it cannot test recovery or errors that compound
+  over turns. The complement is a simulated-caller suite (τ-bench style, e.g.
+  promptfoo's [simulated user](https://promptfoo.dev/docs/providers/simulated-user/)).
+  Gate on both. [Deployment in a box](https://genai4business.com/work/deployment-in-a-box)
+  adds that layer.
+- **Text decisions only.** Speech recognition errors, latency, barge-in and
+  turn-taking are out of scope. Use audio-level suites for those (e.g.
+  ServiceNow's [EVA-Bench](https://arxiv.org/abs/2605.13841)).
+- **Keyword checks are brittle.** Prefer tool-call checks (`calls`, `no_calls`,
+  `escalate`) and keep `say_*` for facts that must appear verbatim (a ticket
+  number, an emergency line). The one `rubric` is an uncalibrated LLM judge that
+  has not been run: calibrate any judge against human labels before trusting it.
+- **Synthetic data.** With real transcripts, redact personal data before they
+  enter the repo, and decide who annotates (CX), who owns the tags (the
+  deployment team) and who approves a baseline refresh (a reviewed change in
+  the same pull request: the gate already forces that).
+
+The utility, its customers and its emergency number are fictional.
 
 MIT licensed.

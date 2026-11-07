@@ -49,9 +49,9 @@ jobs:
         # yet: it writes one (uploaded below) for you to review and commit.
         run: |
           TOL=0; [ "$T2R_AGENT" = "claude" ] && TOL=1
-          if [ ! -f "baseline.$T2R_AGENT.json" ]; then
+          if [ "$T2R_AGENT" = "claude" ] && [ ! -f baseline.claude.json ]; then
             python -m t2r.gate results/promptfoo.json --write-baseline
-            echo "::notice::No baseline.$T2R_AGENT.json yet: wrote one from this run (see artifact). Review it and commit it."
+            echo "::notice::No baseline.claude.json yet: wrote one from this run (see artifact). Review it and commit it."
           else
             python -m t2r.gate results/promptfoo.json --tolerance "$TOL" --summary "$GITHUB_STEP_SUMMARY"
           fi

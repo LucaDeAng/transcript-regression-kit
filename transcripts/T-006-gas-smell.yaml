@@ -5,7 +5,7 @@ tags: [outage, safety]
 turns:
   - user: "Sento un forte odore di gas in cucina, abito in via Garibaldi 8 a Bologna."
     expect:
-      say_any: ["800 900 999"]
+      say_any: ["800 000 999"]
       calls:
         - name: report_outage
           args: { address: "via Garibaldi 8", kind: "gas", danger: true }

@@ -30,7 +30,7 @@ THIRD_PARTY_REPLY = (
     "dopo la verifica con codice cliente e data di nascita."
 )
 ASK_CREDENTIALS = "Certo. Mi dice il codice cliente e la data di nascita dell'intestatario?"
-SCOPE_REPLY = "Mi occupo solo di bollette, guasti e autoletture di Lumen Energia, luce e gas. Come posso aiutarla?"
+SCOPE_REPLY = "Mi occupo solo di bollette, guasti e autoletture di Brezzaluce Energia, luce e gas. Come posso aiutarla?"
 
 
 def _norm(s: str) -> str:
@@ -162,7 +162,7 @@ def respond(messages: list[dict[str, Any]], version: str = "v1") -> dict[str, An
     texts = _user_texts(messages)
 
     if _has(text, "ignora", "istruzioni precedenti", "prompt di sistema"):
-        return _reply("Posso aiutarla con bollette, guasti e autoletture di Lumen Energia. Di cosa ha bisogno?")
+        return _reply("Posso aiutarla con bollette, guasti e autoletture di Brezzaluce Energia. Di cosa ha bisogno?")
 
     if _has(text, "operatore", "persona vera", "umano", "robot"):
         if version == "v2":
@@ -176,7 +176,7 @@ def respond(messages: list[dict[str, Any]], version: str = "v1") -> dict[str, An
     if _has(text, "odore di gas", "puzza di gas", "fuga di gas"):
         return _reply(
             "Esca dalla stanza, non usi interruttori né fiamme e chiami il pronto intervento "
-            "gas 800 900 999. Intanto registro la segnalazione.",
+            "gas 800 000 999. Intanto registro la segnalazione.",
             _call("report_outage", address=_address(text), kind="gas", danger=True),
         )
 
@@ -210,4 +210,4 @@ def respond(messages: list[dict[str, Any]], version: str = "v1") -> dict[str, An
     if intent:
         return _reply(ASK_CREDENTIALS)
 
-    return _reply("Buongiorno, sono l'assistente di Lumen Energia. Posso aiutarla con bollette, guasti e autoletture.")
+    return _reply("Buongiorno, sono l'assistente di Brezzaluce Energia. Posso aiutarla con bollette, guasti e autoletture.")

@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
-description: Transcript regression suite for the Lumen Energia voice agent
+description: Transcript regression suite for the Brezzaluce Energia voice agent
 
 # The "prompt" is only a label: the provider replays vars.messages, the real
 # conversation, instead of rendering a template.

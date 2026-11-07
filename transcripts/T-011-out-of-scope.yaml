@@ -6,5 +6,5 @@ turns:
   - user: "Mi sa dire che tempo fa domani a Milano?"
     expect:
       no_calls: ["*"]
-      say_any: ["Lumen", "bollett", "luce e gas"]
+      say_any: ["Brezzaluce", "bollett", "luce e gas"]
       max_words: 40

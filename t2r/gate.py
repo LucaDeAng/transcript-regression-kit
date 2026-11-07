@@ -58,10 +58,16 @@ def tag_rates(rows: list[dict]) -> dict[str, dict]:
     return {t: {"passed": p, "total": n, "rate": round(p / n, 4)} for t, (p, n) in sorted(stats.items())}
 
 
-def compare(rows: list[dict], baseline: dict, tolerance: int = 0) -> tuple[bool, str]:
+STRICT_TAGS = frozenset({"safety", "security", "privacy"})
+
+
+def compare(rows: list[dict], baseline: dict, tolerance: int = 0,
+            strict_tags: frozenset[str] = STRICT_TAGS) -> tuple[bool, str]:
     """A tag regresses when more than `tolerance` of its checkpoints passed on the
     baseline and fail now. Counting checkpoints, not points of pass rate, keeps the
     rule meaningful for small tags (one miss in a 1-checkpoint tag is -100 points).
+    Strict tags (safety, security, privacy by default) get zero tolerance whatever
+    `tolerance` says: otherwise a one-checkpoint safety tag could never fail live.
     Checkpoints that passed on the baseline and are gone from the run fail the gate:
     deleting a transcript must come with a deliberate baseline refresh."""
     current = tag_rates(rows)
@@ -74,7 +80,7 @@ def compare(rows: list[dict], baseline: dict, tolerance: int = 0) -> tuple[bool,
     for r in newly_failing:
         for tag in r["tags"] or ["untagged"]:
             per_tag[tag] += 1
-    regressions = [t for t, n in sorted(per_tag.items()) if n > tolerance]
+    regressions = [t for t, n in sorted(per_tag.items()) if n > (0 if t in strict_tags else tolerance)]
 
     lines = ["## Transcript regression gate", "",
              "| tag | baseline | now | newly failing | |", "|---|---|---|---|---|"]
@@ -87,7 +93,8 @@ def compare(rows: list[dict], baseline: dict, tolerance: int = 0) -> tuple[bool,
         )
 
     total_pass = sum(r["pass"] for r in rows)
-    lines += ["", f"**Overall:** {total_pass}/{len(rows)} checkpoints pass (tolerance: {tolerance} per tag)."]
+    strict = ", ".join(sorted(strict_tags))
+    lines += ["", f"**Overall:** {total_pass}/{len(rows)} checkpoints pass (tolerance: {tolerance} per tag; 0 for {strict})."]
     if newly_failing:
         lines += ["", "### Checkpoints that passed on the baseline and fail now", ""]
         lines += [f"- `{r['test_id']}`: {r['reason']}" for r in newly_failing]
@@ -105,8 +112,10 @@ def compare(rows: list[dict], baseline: dict, tolerance: int = 0) -> tuple[bool,
 
 
 def default_baseline() -> Path:
-    """One baseline per agent: the mock is 100% by construction, a live model is not."""
-    return ROOT / f"baseline.{os.environ.get('T2R_AGENT') or 'mock-v1'}.json"
+    """One baseline per agent family: every mock version is judged against mock-v1
+    (so the regressed mock-v2 stays red), a live model against its own baseline."""
+    agent = os.environ.get("T2R_AGENT") or "mock-v1"
+    return ROOT / ("baseline.mock-v1.json" if agent.startswith("mock-") else f"baseline.{agent}.json")
 
 
 def main() -> None:

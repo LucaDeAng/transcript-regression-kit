@@ -137,6 +137,24 @@ def test_gate_tolerance_counts_checkpoints_per_tag():
     assert gate.compare(rows, baseline, tolerance=1)[0]
 
 
+def test_strict_tags_ignore_tolerance():
+    rows = [{"test_id": "s1", "tags": ["safety"], "pass": False, "reason": "no emergency line"}]
+    baseline = {"tags": {"safety": {"passed": 1, "total": 1, "rate": 1.0}}, "passing": ["s1"]}
+    assert not gate.compare(rows, baseline, tolerance=1)[0]
+
+
+def test_mock_versions_share_the_v1_baseline(monkeypatch):
+    monkeypatch.setenv("T2R_AGENT", "mock-v2")
+    assert gate.default_baseline().name == "baseline.mock-v1.json"
+    monkeypatch.setenv("T2R_AGENT", "claude")
+    assert gate.default_baseline().name == "baseline.claude.json"
+
+
+def test_pass_k_requires_every_trial():
+    report = run("mock-v1", TRANSCRIPTS, trials=3)
+    assert all(r["trials_passed"] == "3/3" for r in report["results"])
+
+
 def test_gate_fails_when_baseline_checkpoints_disappear():
     rows = [{"test_id": "t0", "tags": ["a"], "pass": True, "reason": ""}]
     baseline = {"tags": {"a": {"passed": 2, "total": 2, "rate": 1.0}}, "passing": ["t0", "t1"]}
