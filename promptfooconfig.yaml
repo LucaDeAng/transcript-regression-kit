@@ -10,7 +10,7 @@ providers:
   - id: file://providers/agent_provider.py
     label: voice-agent
     config:
-      agent: mock-v1   # mock-v1 | mock-v2 | claude  (or set T2R_AGENT)
+      agent: mock-v2   # DEMO: the regressed agent. This branch is meant to stay red.
 
 defaultTest:
   assert:
