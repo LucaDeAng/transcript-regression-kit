@@ -1,0 +1,13 @@
+id: T-002
+title: Two requests in one sentence (outage + bill)
+source: synthetic
+tags: [multi-intent, outage]
+turns:
+  - user: "Mi è saltata la luce in via Roma 12 a Torino e volevo anche sapere quando scade la bolletta."
+    expect:
+      calls:
+        - name: report_outage
+          args: { address: "via Roma 12", kind: "electricity" }
+      no_calls: [get_bill]
+      say_all: ["bolletta"]
+      max_words: 45

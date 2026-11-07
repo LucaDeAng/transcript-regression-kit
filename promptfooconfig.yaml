@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: Transcript regression suite for the Lumen Energia voice agent
+
+# The "prompt" is only a label: the provider replays vars.messages, the real
+# conversation, instead of rendering a template.
+prompts:
+  - "{{test_id}}"
+
+providers:
+  - id: file://providers/agent_provider.py
+    label: voice-agent
+    config:
+      agent: mock-v1   # mock-v1 | mock-v2 | claude  (or set T2R_AGENT)
+
+defaultTest:
+  assert:
+    - type: python
+      value: file://t2r/promptfoo_assert.py
+
+tests: file://generated/tests.yaml
+
+evaluateOptions:
+  maxConcurrency: 4

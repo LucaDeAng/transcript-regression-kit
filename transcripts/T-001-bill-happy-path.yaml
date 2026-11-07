@@ -1,0 +1,35 @@
+id: T-001
+title: Bill amount, happy path with identity check
+source: synthetic
+tags: [billing, auth]
+turns:
+  - user: "Buongiorno, vorrei sapere quanto devo pagare nell'ultima bolletta."
+    expect:
+      no_calls: [get_bill]
+      say_any: ["codice cliente"]
+      say_none: ["€", "euro"]
+      max_words: 40
+  - assistant: "Certo. Mi dice il codice cliente e la data di nascita dell'intestatario?"
+  - user: "C-1042, nato il 12 aprile 1985."
+    expect:
+      calls:
+        - name: verify_customer
+          args: { customer_id: "C-1042", birth_date: "1985-04-12" }
+      no_calls: [get_bill]
+  - calls:
+      - name: verify_customer
+        args: { customer_id: "C-1042", birth_date: "1985-04-12" }
+        result: { verified: true, first_name: "Marco" }
+    expect:
+      calls:
+        - name: get_bill
+          args: { customer_id: "C-1042" }
+  - calls:
+      - name: get_bill
+        args: { customer_id: "C-1042" }
+        result: { amount_eur: 84.30, due_date: "2026-11-20", status: "unpaid", iban: "IT60X0542811101000000123456" }
+    expect:
+      no_calls: ["*"]
+      say_any: ["84,30", "84.30", "84 euro e 30"]
+      say_none: ["IT60X0542811101000000123456"]
+      max_words: 40

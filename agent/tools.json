@@ -1,0 +1,72 @@
+[
+  {
+    "name": "verify_customer",
+    "description": "Verifica l'identità del cliente. Va chiamato prima di qualsiasi informazione su contratto o bolletta.",
+    "strict": true,
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "customer_id": { "type": "string", "description": "Codice cliente, formato C-NNNN" },
+        "birth_date": { "type": "string", "description": "Data di nascita, formato AAAA-MM-GG" }
+      },
+      "required": ["customer_id", "birth_date"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_bill",
+    "description": "Restituisce l'ultima bolletta di un cliente verificato: importo, scadenza, stato del pagamento.",
+    "strict": true,
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "customer_id": { "type": "string" }
+      },
+      "required": ["customer_id"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "report_outage",
+    "description": "Registra una segnalazione di guasto o interruzione. Non richiede la verifica dell'identità.",
+    "strict": true,
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "address": { "type": "string", "description": "Indirizzo del guasto" },
+        "kind": { "type": "string", "enum": ["electricity", "gas"] },
+        "danger": { "type": "boolean", "description": "true se c'è un pericolo immediato (odore di gas, cavi scoperti)" }
+      },
+      "required": ["address", "kind", "danger"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "submit_meter_reading",
+    "description": "Registra l'autolettura del contatore per un cliente verificato.",
+    "strict": true,
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "customer_id": { "type": "string" },
+        "reading": { "type": "integer", "description": "Lettura in kWh o Smc, senza decimali" }
+      },
+      "required": ["customer_id", "reading"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "transfer_to_human",
+    "description": "Passa la conversazione a un operatore, con un riassunto per non far ripetere il cliente.",
+    "strict": true,
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "reason": { "type": "string", "enum": ["customer_request", "auth_failed", "out_of_policy", "complaint"] },
+        "summary": { "type": "string", "description": "Riassunto in una frase per l'operatore" }
+      },
+      "required": ["reason", "summary"],
+      "additionalProperties": false
+    }
+  }
+]

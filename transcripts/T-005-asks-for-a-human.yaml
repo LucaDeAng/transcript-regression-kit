@@ -1,0 +1,12 @@
+id: T-005
+title: Customer asks for a human straight away
+source: synthetic
+tags: [escalation]
+turns:
+  - user: "Non voglio parlare con un robot, mi passi un operatore per favore."
+    expect:
+      escalate: true
+      calls:
+        - name: transfer_to_human
+          args: { reason: "customer_request" }
+      max_words: 30

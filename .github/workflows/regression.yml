@@ -1,0 +1,40 @@
+name: transcript-regression
+
+on:
+  pull_request:
+    paths: ["agent/**", "transcripts/**", "providers/**", "t2r/**", "promptfooconfig.yaml", "baseline.json"]
+  workflow_dispatch:
+    inputs:
+      agent:
+        description: "mock-v1 | mock-v2 | claude"
+        default: mock-v1
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    env:
+      # PRs run the deterministic mock; dispatch with `claude` for the live agent.
+      T2R_AGENT: ${{ inputs.agent || 'mock-v1' }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      PROMPTFOO_DISABLE_TELEMETRY: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - run: pip install -r requirements.txt
+      - name: Unit tests for the kit
+        run: pytest -q
+      - name: Compile transcripts into tests
+        run: python -m t2r.build
+      - name: Replay every checkpoint against the agent
+        run: npx -y promptfoo@0.125.1 eval -c promptfooconfig.yaml -o results/promptfoo.json --no-cache --no-progress-bar || true
+      - name: Gate on per-tag regressions
+        # A live model is not deterministic: allow a small drop per tag.
+        run: |
+          TOL=0; [ "$T2R_AGENT" = "claude" ] && TOL=0.1
+          python -m t2r.gate results/promptfoo.json --tolerance "$TOL" --summary "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: promptfoo-results, path: results/ }

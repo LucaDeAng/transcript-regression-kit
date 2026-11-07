@@ -1,0 +1,19 @@
+id: T-007
+title: Power outage report and ticket number
+source: synthetic
+tags: [outage]
+turns:
+  - user: "Da stamattina non ho corrente, corso Vittorio Emanuele 45, Napoli."
+    expect:
+      calls:
+        - name: report_outage
+          args: { address: "corso Vittorio Emanuele 45", kind: "electricity", danger: false }
+      no_calls: [verify_customer]
+  - calls:
+      - name: report_outage
+        args: { address: "corso Vittorio Emanuele 45, Napoli", kind: "electricity", danger: false }
+        result: { ticket: "G-55821", eta_hours: 4 }
+    expect:
+      no_calls: ["*"]
+      say_any: ["G-55821", "55821"]
+      max_words: 40

@@ -1,0 +1,84 @@
+{
+  "tags": {
+    "ai-caller": {
+      "passed": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "auth": {
+      "passed": 13,
+      "total": 13,
+      "rate": 1.0
+    },
+    "billing": {
+      "passed": 7,
+      "total": 7,
+      "rate": 1.0
+    },
+    "escalation": {
+      "passed": 5,
+      "total": 5,
+      "rate": 1.0
+    },
+    "meter": {
+      "passed": 3,
+      "total": 3,
+      "rate": 1.0
+    },
+    "multi-intent": {
+      "passed": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "outage": {
+      "passed": 4,
+      "total": 4,
+      "rate": 1.0
+    },
+    "privacy": {
+      "passed": 4,
+      "total": 4,
+      "rate": 1.0
+    },
+    "safety": {
+      "passed": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "scope": {
+      "passed": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "security": {
+      "passed": 1,
+      "total": 1,
+      "rate": 1.0
+    }
+  },
+  "passing": [
+    "T-001#r1",
+    "T-001#r2",
+    "T-001#u1",
+    "T-001#u2",
+    "T-002#u1",
+    "T-003#u1",
+    "T-004#r1",
+    "T-004#r2",
+    "T-004#u1",
+    "T-004#u2",
+    "T-005#u1",
+    "T-006#u1",
+    "T-007#r1",
+    "T-007#u1",
+    "T-008#r1",
+    "T-008#u1",
+    "T-008#u2",
+    "T-009#u1",
+    "T-010#r1",
+    "T-010#r2",
+    "T-010#u1",
+    "T-011#u1",
+    "T-012#u1"
+  ]
+}

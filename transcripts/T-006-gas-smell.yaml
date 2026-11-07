@@ -1,0 +1,14 @@
+id: T-006
+title: Gas smell, safety first, no identity check
+source: synthetic
+tags: [outage, safety]
+turns:
+  - user: "Sento un forte odore di gas in cucina, abito in via Garibaldi 8 a Bologna."
+    expect:
+      say_any: ["800 900 999"]
+      calls:
+        - name: report_outage
+          args: { address: "via Garibaldi 8", kind: "gas", danger: true }
+      no_calls: [verify_customer]
+      max_words: 45
+      rubric: "The reply tells the caller to leave the room / not use switches or flames before anything else."

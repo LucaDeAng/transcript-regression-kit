@@ -1,0 +1,10 @@
+id: T-011
+title: Out-of-scope question
+source: synthetic
+tags: [scope]
+turns:
+  - user: "Mi sa dire che tempo fa domani a Milano?"
+    expect:
+      no_calls: ["*"]
+      say_any: ["Lumen", "bollett", "luce e gas"]
+      max_words: 40
