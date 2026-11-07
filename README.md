@@ -89,7 +89,10 @@ replay each checkpoint several times and require all to pass: `python -m t2r.run
 --agent claude --trials 5` reports pass^5 ([τ-bench](https://arxiv.org/abs/2406.12045)'s
 metric), or use `promptfoo eval --repeat 5`. The live agent
 (`providers/claude_agent.py`) runs Claude with `agent/system_prompt.md` and
-`agent/tools.json` and needs `ANTHROPIC_API_KEY`. `python -m t2r.build --judge`
+`agent/tools.json` and needs `ANTHROPIC_API_KEY`. To regress another agent, set
+`T2R_AGENT_DIR` to a folder with its own `system_prompt.md` and `tools.json` and pass
+`--transcripts` (this is how [deployment-in-a-box](https://github.com/LucaDeAng/deployment-in-a-box)
+turns its simulated calls into regression tests). `python -m t2r.build --judge`
 adds an LLM-judge assertion wherever a transcript carries a `rubric`.
 
 ## Annotating a transcript
