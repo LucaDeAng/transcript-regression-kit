@@ -153,8 +153,10 @@ must come with a deliberate baseline refresh:
 the kit (parser, checks, gate), not the prompt: the mock does not read
 `agent/system_prompt.md`, so a prompt edit cannot turn it red. The live agent
 runs on demand (`workflow_dispatch` with `claude`). The request shape has been
-checked against the Anthropic SDK, but **no live run has been published yet**.
-Add `ANTHROPIC_API_KEY` as a secret; the first run writes `baseline.claude.json`
+checked against the Anthropic SDK. **This repo's own suite has no published live
+baseline yet**; the first live runs of the kit are the handshake tests T-012a–f in
+[ai-to-ai-call-lab](https://github.com/LucaDeAng/ai-to-ai-call-lab#runs-against-claude-7-november-2026),
+against Claude Haiku, Sonnet and Opus 5.5. Add `ANTHROPIC_API_KEY` as a secret; the first run writes `baseline.claude.json`
 as an artifact for you to review and commit.
 
 ## Layout
